@@ -1,7 +1,6 @@
 const fs = require('fs');
 const readline = require('readline');
 
-
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout
@@ -51,21 +50,25 @@ async function compareFiles() {
             Object.entries(jsonData1).forEach(([code, word]) => {
               if (!jsonData2.hasOwnProperty(code)) {
                 missingWords[code] = word;
+                jsonData2[code] = word; // Добавляем недостающие слова из первого файла во второй файл
               }
             });
 
             console.log('Кодовые слова, которых нет во втором файле:');
             Object.entries(missingWords).forEach(([code, word]) => {
-              console.log(`${code}: ${word}`); 
-              jsonData2[code] = word;
+              console.log(`${code}: ${word}`);
             });
 
-            const updatedData2 = JSON.stringify(jsonData2, null, 2);
+            const missingWordsFileName = 'missing_words.json'; // Имя файла для сохранения данных missingWords
+
+            const missingWordsData = JSON.stringify(missingWords, null, 2); // Преобразуем данные в формат JSON
+            await writeFile(missingWordsFileName, missingWordsData); // Записываем данные в файл
 
             // Запись измененных данных обратно во второй файл
+            const updatedData2 = JSON.stringify(jsonData2, null, 2); // Преобразуем обновленные данные второго файла в формат JSON
             await writeFile(file2Path.trim(), updatedData2);
 
-            console.log('Данные успешно обновлены.');
+            console.log(`Данные успешно сохранены в файле: ${missingWordsFileName}`);
 
             rl.close();
           } catch (error) {
