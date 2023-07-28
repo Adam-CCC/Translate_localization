@@ -39,9 +39,10 @@ async function translateFromMissingWords(missingWords, targetLanguage, folderId)
       translatedJson[key] = translatedTexts[index];
     });
 
-    console.log('Translated JSON:', translatedJson);
+    return translatedJson; // Возвращаем переведенный JSON-объект
   } catch (error) {
     console.error('Error processing missing words:', error.message);
+    return null;
   }
 }
 
@@ -101,13 +102,19 @@ async function compareFiles() {
             const targetLanguage = 'ru'; // Язык перевода, в данном случае, русский
             const folderId = 'b1g2jfsjctrmjmpl626g'; // Замените на ваш реальный folder_id
 
-            await translateFromMissingWords(missingWords, targetLanguage, folderId);
+            const translatedMissingWords = await translateFromMissingWords(missingWords, targetLanguage, folderId);
 
-            // Запись измененных данных обратно во второй файл
-            const updatedData2 = JSON.stringify(jsonData2, null, 2); // Преобразуем обновленные данные второго файла в формат JSON
-            await writeFile(file2Path.trim(), updatedData2);
+            if (translatedMissingWords) {
+              // Объединяем переведенные слова с данными из второго файла
+              Object.assign(jsonData2, translatedMissingWords);
+              console.log('Переведенные слова добавлены во второй файл.');
 
-            console.log(`Данные успешно сохранены в файле: ${file2Path.trim()}`);
+              // Запись измененных данных обратно во второй файл
+              const updatedData2 = JSON.stringify(jsonData2, null, 2); // Преобразуем обновленные данные второго файла в формат JSON
+              await writeFile(file2Path.trim(), updatedData2);
+
+              console.log(`Данные успешно сохранены в файле: ${file2Path.trim()}`);
+            }
 
             rl.close();
           } catch (error) {
