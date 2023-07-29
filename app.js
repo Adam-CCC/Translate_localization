@@ -3,7 +3,7 @@ const readline = require('readline');
 const axios = require('axios');
 
 // Ваш IAM-токен от Yandex Cloud
-const IAM_TOKEN = 't1.9euelZqOl5SSk5jNmMqMz8uOl56Tju3rnpWaz5rJmZuPlYrHm5CMjYyKm4rl8_dVO3FZ-e9QRTBd_t3z9xVqbln571BFMF3-zef1656VmpyTmpDHx5aXzpPKz8vIy5bH7_zF656VmpyTmpDHx5aXzpPKz8vIy5bH.T5pT3O9CfJiUrAHqMvG1a2XfetxBd9dsk1ZY-FyusfDKC5z4x-tBgr1MoazxEK0m458fF-hthxcNo9bIzXhpBw';
+const IAM_TOKEN = 't1.9euelZrPmomei4-KzMeNy8uLmc3Ll-3rnpWaz5rJmZuPlYrHm5CMjYyKm4rl8_dfAmpZ-e9NUFxN_t3z9x8xZ1n5701QXE3-zef1656VmseYz5yPmJWajomKyc2cjZyJ7_zF656VmseYz5yPmJWajomKyc2cjZyJ.PEIdeQZHgYd3YXn3PnjwK430cHqfdYpW3YqDKmifTMby6V09egZ2rqIYnLaVv-HD61MfRWA-o7i_WMWSxRZ_AA';
 
 // Функция для отправки запроса к Yandex Translate API
 async function translateTexts(texts, targetLanguage, folderId) {
@@ -77,6 +77,22 @@ function writeFile(filePath, data) {
   });
 }
 
+// Функция для добавления переведенных слов во второй файл
+async function addToSecondFile(filePath, jsonData) {
+  try {
+    const updatedData = JSON.stringify(jsonData, null, 2);
+    const data2 = await readFile(filePath);
+    const lastIndex = data2.lastIndexOf('\n}'); // Находим индекс последнего слова перед закрывающей фигурной скобкой
+
+    // Добавляем двойной пробел перед каждой строкой переведенных данных
+    const indentedUpdatedData = updatedData.replace(/\n/g, '\n  ');
+
+    await fs.promises.writeFile(filePath, data2.slice(0, lastIndex) + `,\n  ${indentedUpdatedData.slice(1, -1)}\n}`, 'utf8');
+  } catch (error) {
+    console.error('Ошибка при добавлении переведенных слов во второй файл:', error);
+  }
+}
+
 // Функция для сравнения файлов
 async function compareFiles() {
   try {
@@ -105,14 +121,11 @@ async function compareFiles() {
             const translatedMissingWords = await translateFromMissingWords(missingWords, targetLanguage, folderId);
 
             if (translatedMissingWords) {
-              // Объединяем переведенные слова с данными из второго файла
-              Object.assign(jsonData2, translatedMissingWords);
+              // Добавляем переведенные слова во второй файл
+              await addToSecondFile(file2Path.trim(), translatedMissingWords);
+        
               console.log('Переведенные слова добавлены во второй файл.');
-
-              // Запись измененных данных обратно во второй файл
-              const updatedData2 = JSON.stringify(jsonData2, null, 2); // Преобразуем обновленные данные второго файла в формат JSON
-              await writeFile(file2Path.trim(), updatedData2);
-
+        
               console.log(`Данные успешно сохранены в файле: ${file2Path.trim()}`);
             }
 
