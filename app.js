@@ -12,15 +12,39 @@ async function translateTexts(texts, targetLanguage, folderId) {
     'Authorization': `Bearer ${IAM_TOKEN}`
   };
 
+  // Функция для извлечения плейсхолдеров из текста
+  const extractPlaceholders = (text) => {
+    const placeholders = text.match(/{{.+?}}/g) || [];
+    return placeholders.map(placeholder => ({ original: placeholder, replacement: `__PLACEHOLDER_${placeholders.indexOf(placeholder)}__` }));
+  };
+
+  // Заменяем плейсхолдеры в исходных текстах
+  const placeholderMaps = texts.map(text => {
+    const placeholders = extractPlaceholders(text);
+    let modifiedText = text;
+    placeholders.forEach((placeholder, index) => {
+      modifiedText = modifiedText.replace(placeholder.original, placeholder.replacement);
+    });
+    return { originalText: text, modifiedText, placeholders };
+  });
+
   const body = {
     targetLanguageCode: targetLanguage,
-    texts,
+    texts: placeholderMaps.map(item => item.modifiedText), // Передаем модифицированные тексты для перевода
     folderId
   };
 
   try {
     const response = await axios.post('https://translate.api.cloud.yandex.net/translate/v2/translate', body, { headers });
-    return response.data.translations.map(translation => translation.text);
+    const translations = response.data.translations.map((translation, index) => {
+      const { placeholders } = placeholderMaps[index];
+      let translatedText = translation.text;
+      placeholders.forEach(placeholder => {
+        translatedText = translatedText.replace(placeholder.replacement, placeholder.original);
+      });
+      return translatedText;
+    });
+    return translations;
   } catch (error) {
     console.error('Translation error:', error.message);
     return [];
