@@ -3,7 +3,7 @@ const readline = require('readline');
 const axios = require('axios');
 
 // Ваш IAM-токен от Yandex Cloud
-const IAM_TOKEN = 't1.9euelZrPmomei4-KzMeNy8uLmc3Ll-3rnpWaz5rJmZuPlYrHm5CMjYyKm4rl8_dfAmpZ-e9NUFxN_t3z9x8xZ1n5701QXE3-zef1656VmseYz5yPmJWajomKyc2cjZyJ7_zF656VmseYz5yPmJWajomKyc2cjZyJ.PEIdeQZHgYd3YXn3PnjwK430cHqfdYpW3YqDKmifTMby6V09egZ2rqIYnLaVv-HD61MfRWA-o7i_WMWSxRZ_AA';
+const IAM_TOKEN = 't1.9euelZrHnsuay5bPno_PkY7NjMbPy-3rnpWaz5rJmZuPlYrHm5CMjYyKm4rl8_cuLGdZ-e9zPQc0_N3z925aZFn573M9BzT8zef1656Vmp6XlJWcm5ieyMbJnMyby86Q7_zF656Vmp6XlJWcm5ieyMbJnMyby86Q.vcPi7fLh1Hwh4j9BaaCjv_GvbFGQm1HZl01rFqaYqFJoBKoUUAlc3cb2kfVn8JHlEja9G1yHxpVPe1a1DW7dCg';
 
 // Функция для отправки запроса к Yandex Translate API
 async function translateTexts(texts, targetLanguage, folderId) {
@@ -119,8 +119,9 @@ async function compareFiles() {
             const folderId = 'b1g2jfsjctrmjmpl626g'; // Замените на ваш реальный folder_id
 
             const translatedMissingWords = await translateFromMissingWords(missingWords, targetLanguage, folderId);
-
-            if (translatedMissingWords) {
+            if (Object.keys(missingWords).length === 0) {
+              console.log('\x1b[32m%s\x1b[0m', 'Нет отсутствующих слов'); // Выводим "Нет отсутствующих слов" в зеленом цвете
+            } else {
               // Добавляем переведенные слова во второй файл
               await addToSecondFile(file2Path.trim(), translatedMissingWords);
         
