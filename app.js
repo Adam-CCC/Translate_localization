@@ -120,11 +120,11 @@ async function addToSecondFile(filePath, jsonData) {
 // Функция для сравнения файлов
 async function compareFiles() {
   try {
-    rl.question('Введите путь к первому файлу: ', async (file1Path) => {
+    rl.question('\x1b[36mВведите путь к первому файлу: \x1b[0m', async (file1Path) => {
       try {
         const data1 = await readFile(file1Path.trim());
 
-        rl.question('Введите путь ко второму файлу: ', async (file2Path) => {
+        rl.question('\x1b[36mВведите путь ко второму файлу: \x1b[0m', async (file2Path) => {
           try {
             const data2 = await readFile(file2Path.trim());
 
@@ -149,9 +149,9 @@ async function compareFiles() {
               // Добавляем переведенные слова во второй файл
               await addToSecondFile(file2Path.trim(), translatedMissingWords);
         
-              console.log('Переведенные слова добавлены во второй файл.');
+              console.log('\x1b[32m%s\x1b[0m', 'Переведенные слова добавлены во второй файл.');
         
-              console.log(`Данные успешно сохранены в файле: ${file2Path.trim()}`);
+              console.log('\x1b[32m%s\x1b[0m', `Данные успешно сохранены в файле: ${file2Path.trim()}`);
             }
 
             rl.close();
