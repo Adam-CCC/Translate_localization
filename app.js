@@ -77,12 +77,42 @@ async function translateTexts(texts, targetLanguage, folderId) {
   }
 }
 
-// Функция для чтения JSON-файла и перевода слов
+// Функция для разделения текста на блоки по 10000 символов
+function chunkText(text, chunkSize) {
+  const chunks = [];
+  for (let i = 0; i < text.length; i += chunkSize) {
+    chunks.push(text.slice(i, i + chunkSize));
+  }
+  return chunks;
+}
+
+// Функция для перевода текста, разделенного на блоки
+async function translateChunks(chunks, targetLanguage, folderId) {
+  const translatedChunks = [];
+  for (const chunk of chunks) {
+    const translatedTexts = await translateTexts([chunk], targetLanguage, folderId);
+    if (translatedTexts.length > 0) {
+      translatedChunks.push(translatedTexts[0]);
+    }
+  }
+  return translatedChunks;
+}
+
 async function translateFromMissingWords(missingWords, targetLanguage, folderId) {
   try {
     const texts = Object.values(missingWords);
+    const maxChunkSize = 10000; // Максимальный размер блока символов
 
-    const translatedTexts = await translateTexts(texts, targetLanguage, folderId);
+    // Разделяем тексты на блоки по 10000 символов
+    const textChunks = texts.map(text => chunkText(text, maxChunkSize));
+
+    const translatedTexts = [];
+
+    // Переводим каждый блок текста и собираем переводы в один массив
+    for (const chunks of textChunks) {
+      const translatedChunks = await translateChunks(chunks, targetLanguage, folderId);
+      translatedTexts.push(...translatedChunks);
+    }
 
     const translatedJson = {};
     Object.keys(missingWords).forEach((key, index) => {
