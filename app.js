@@ -31,11 +31,6 @@ function printText(text, color) {
   } // Выведем текст
 } 
 
-// Функция для проверки допустимости языкового кода
-function isValidLanguageCode(languageCode, languages) {
-  return languages.some(language => language.code === languageCode);
-}
-
 // Функция для отправки запроса к Yandex Translate API
 async function translateTexts(texts, targetLanguage, folderId) {
   const headers = {
@@ -98,6 +93,25 @@ async function translateFromMissingWords(missingWords, targetLanguage, folderId)
   } catch (error) {
     printText('Error processing missing words:', error.message);
     return null;
+  }
+}
+
+async function isValidLanguageCode(languageCode) {
+  try {
+    const languagesResponse = await axios.post(
+      'https://translate.api.cloud.yandex.net/translate/v2/languages',
+      { folderId : FOLDER_ID},
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${IAM_TOKEN}`
+        }
+      }
+    );
+    const supportedLanguages = languagesResponse.data.languages;
+    return supportedLanguages.some(language => language.code === languageCode);
+  } catch (error) {
+    return false;
   }
 }
 
@@ -168,19 +182,8 @@ async function compareFiles() {
                 });
 
                 // Проверка введенного языкового кода
-                const languagesResponse = await axios.post(
-                  'https://translate.api.cloud.yandex.net/translate/v2/languages',
-                  { folderId: FOLDER_ID},
-                  {
-                    headers: {
-                      'Content-Type': 'application/json',
-                      'Authorization': `Bearer ${IAM_TOKEN}`
-                    }
-                  }
-                );
-
-                const supportedLanguages = languagesResponse.data.languages;
-                if (!isValidLanguageCode(language, supportedLanguages)) {
+                const isValid = await isValidLanguageCode(language);
+                if (!isValid) {
                   printText('Неправильно введен язык', 'red');
                   rl.close();
                   return;
@@ -201,7 +204,7 @@ async function compareFiles() {
 
                 rl.close();
               } catch(error) {
-                console.error('Ошибка при вводе языка: ', error);
+                printText('Неправильно введен язык ', 'red');
                 rl.close();
               }
             });
