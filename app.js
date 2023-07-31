@@ -3,7 +3,33 @@ const readline = require('readline');
 const axios = require('axios');
 
 // Ваш IAM-токен от Yandex Cloud
-const IAM_TOKEN = 't1.9euelZrHnsuay5bPno_PkY7NjMbPy-3rnpWaz5rJmZuPlYrHm5CMjYyKm4rl8_cuLGdZ-e9zPQc0_N3z925aZFn573M9BzT8zef1656Vmp6XlJWcm5ieyMbJnMyby86Q7_zF656Vmp6XlJWcm5ieyMbJnMyby86Q.vcPi7fLh1Hwh4j9BaaCjv_GvbFGQm1HZl01rFqaYqFJoBKoUUAlc3cb2kfVn8JHlEja9G1yHxpVPe1a1DW7dCg';
+const IAM_TOKEN = 't1.9euelZqQkpSXxseJj5yZmJmYkM2Wx-3rnpWaz5rJmZuPlYrHm5CMjYyKm4rl8_d-D2JZ-e98L2Ej_t3z9z4-X1n573wvYSP-zef1656VmpiRzc2Nk8iNlsuNi4rGmJSW7_zF656VmpiRzc2Nk8iNlsuNi4rGmJSW.q1MS37ijBRkWhbh2r8f-t8sSmMMOU4IvY0m3grTRrgufbAkB3ZDsDdShT0kOgebcTYhFtOZgyXmEInGCNY9TCA';
+
+//Функция временного выводв
+function printText(text, color) {
+  const colors = {
+    // Цвета текста
+    black: '\x1b[30m',
+    red: '\x1b[31m',
+    green: '\x1b[32m',
+    yellow: '\x1b[33m',
+    blue: '\x1b[34m',
+    magenta: '\x1b[35m',
+    cyan: '\x1b[36m',
+    white: '\x1b[37m',
+
+    // Сброс цвета
+    reset: '\x1b[0m'
+  };
+  process.stdout.clearLine(); // Очистим текущую строку
+  process.stdout.cursorTo(0); // Переместим курсор в начало строки
+  if (colors[color]) {
+    process.stdout.write(colors[color] + text + colors.reset);
+  } else {
+      // Если передан некорректный цвет, выводим текст без изменений
+      process.stdout.write(text);
+  } // Выведем текст
+} 
 
 // Функция для отправки запроса к Yandex Translate API
 async function translateTexts(texts, targetLanguage, folderId) {
@@ -46,7 +72,7 @@ async function translateTexts(texts, targetLanguage, folderId) {
     });
     return translations;
   } catch (error) {
-    console.error('Translation error:', error.message);
+    printText('Translation error:', error.message);
     return [];
   }
 }
@@ -65,7 +91,7 @@ async function translateFromMissingWords(missingWords, targetLanguage, folderId)
 
     return translatedJson; // Возвращаем переведенный JSON-объект
   } catch (error) {
-    console.error('Error processing missing words:', error.message);
+    printText('Error processing missing words:', error.message);
     return null;
   }
 }
@@ -123,50 +149,55 @@ async function compareFiles() {
     rl.question('\x1b[36mВведите путь к первому файлу: \x1b[0m', async (file1Path) => {
       try {
         const data1 = await readFile(file1Path.trim());
-
         rl.question('\x1b[36mВведите путь ко второму файлу: \x1b[0m', async (file2Path) => {
           try {
-            const data2 = await readFile(file2Path.trim());
+            rl.question('\x1b[36mВведите язык перевода: \x1b[0m', async (language) => {
+              try{
+                printText("Загрузка...", "green");
+                const data2 = await readFile(file2Path.trim());
 
-            const jsonData1 = JSON.parse(data1);
-            const jsonData2 = JSON.parse(data2);
+                const jsonData1 = JSON.parse(data1);
+                const jsonData2 = JSON.parse(data2);
 
-            const missingWords = {};
-            Object.entries(jsonData1).forEach(([code, word]) => {
-              if (!jsonData2.hasOwnProperty(code)) {
-                missingWords[code] = word;
-                jsonData2[code] = word; // Добавляем недостающие слова из первого файла во второй файл
+                const missingWords = {};
+                Object.entries(jsonData1).forEach(([code, word]) => {
+                  if (!jsonData2.hasOwnProperty(code)) {
+                    missingWords[code] = word;
+                    jsonData2[code] = word; // Добавляем недостающие слова из первого файла во второй файл
+                  }
+                });
+
+                const targetLanguage = language; // Язык перевода, в данном случае, русский
+                const folderId = 'b1g2jfsjctrmjmpl626g'; // Замените на ваш реальный folder_id
+
+                const translatedMissingWords = await translateFromMissingWords(missingWords, targetLanguage, folderId);
+
+                if (Object.keys(missingWords).length === 0) {
+                  printText( 'Нет отсутствующих слов', "green"); // Выводим "Нет отсутствующих слов" в зеленом цвете
+                } else {
+                  // Добавляем переведенные слова во второй файл
+                  await addToSecondFile(file2Path.trim(), translatedMissingWords);
+                  printText(`Данные успешно добавлены в файл: ${file2Path.trim()}`, "green");
+                }
+
+                rl.close();
+              } catch(error) {
+                console.error('Ошибка при вводе языка: ', error);
+                rl.close();
               }
             });
-
-            const targetLanguage = 'ru'; // Язык перевода, в данном случае, русский
-            const folderId = 'b1g2jfsjctrmjmpl626g'; // Замените на ваш реальный folder_id
-
-            const translatedMissingWords = await translateFromMissingWords(missingWords, targetLanguage, folderId);
-            if (Object.keys(missingWords).length === 0) {
-              console.log('\x1b[32m%s\x1b[0m', 'Нет отсутствующих слов'); // Выводим "Нет отсутствующих слов" в зеленом цвете
-            } else {
-              // Добавляем переведенные слова во второй файл
-              await addToSecondFile(file2Path.trim(), translatedMissingWords);
-        
-              console.log('\x1b[32m%s\x1b[0m', 'Переведенные слова добавлены во второй файл.');
-        
-              console.log('\x1b[32m%s\x1b[0m', `Данные успешно сохранены в файле: ${file2Path.trim()}`);
-            }
-
-            rl.close();
           } catch (error) {
-            console.error('Ошибка при разборе JSON:', error);
+            console.error('Ошибка при разборе файла 2: ', error);
             rl.close();
           }
         });
       } catch (error) {
-        console.error('Ошибка при чтении файла 1:', error);
+        console.error('Ошибка при чтении файла 1: ', error);
         rl.close();
       }
     });
   } catch (error) {
-    console.error('Ошибка при чтении файла 2:', error);
+    console.error('Ошибка при разборе файлов: ', error);
     rl.close();
   }
 }
