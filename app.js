@@ -4,6 +4,12 @@ const axios = require('axios');
 
 // Ваш IAM-токен от Yandex Cloud
 const IAM_TOKEN = 't1.9euelZqQkpSXxseJj5yZmJmYkM2Wx-3rnpWaz5rJmZuPlYrHm5CMjYyKm4rl8_d-D2JZ-e98L2Ej_t3z9z4-X1n573wvYSP-zef1656VmpiRzc2Nk8iNlsuNi4rGmJSW7_zF656VmpiRzc2Nk8iNlsuNi4rGmJSW.q1MS37ijBRkWhbh2r8f-t8sSmMMOU4IvY0m3grTRrgufbAkB3ZDsDdShT0kOgebcTYhFtOZgyXmEInGCNY9TCA';
+const FOLDER_ID = 'b1g2jfsjctrmjmpl626g';
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
 
 //Функция временного выводв
 function printText(text, color) {
@@ -30,6 +36,11 @@ function printText(text, color) {
       process.stdout.write(text);
   } // Выведем текст
 } 
+
+// Функция для проверки допустимости языкового кода
+function isValidLanguageCode(languageCode, languages) {
+  return languages.some(language => language.code === languageCode);
+}
 
 // Функция для отправки запроса к Yandex Translate API
 async function translateTexts(texts, targetLanguage, folderId) {
@@ -95,11 +106,6 @@ async function translateFromMissingWords(missingWords, targetLanguage, folderId)
     return null;
   }
 }
-
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout
-});
 
 // Функция для чтения файла
 function readFile(filePath) {
@@ -167,8 +173,27 @@ async function compareFiles() {
                   }
                 });
 
+                // Проверка введенного языкового кода
+                const languagesResponse = await axios.post(
+                  'https://translate.api.cloud.yandex.net/translate/v2/languages',
+                  { folderId: FOLDER_ID},
+                  {
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${IAM_TOKEN}`
+                    }
+                  }
+                );
+
+                const supportedLanguages = languagesResponse.data.languages;
+                if (!isValidLanguageCode(language, supportedLanguages)) {
+                  printText('Неправильно введен язык', 'red');
+                  rl.close();
+                  return;
+                }
+
                 const targetLanguage = language; // Язык перевода, в данном случае, русский
-                const folderId = 'b1g2jfsjctrmjmpl626g'; // Замените на ваш реальный folder_id
+                const folderId = FOLDER_ID; // Замените на ваш реальный folder_id
 
                 const translatedMissingWords = await translateFromMissingWords(missingWords, targetLanguage, folderId);
 
