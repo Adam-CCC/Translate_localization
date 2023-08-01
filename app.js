@@ -4,7 +4,7 @@ const axios = require('axios');
 
 // Ваш IAM-токен от Yandex Cloud
 const IAM_TOKEN = 'ACTUAL_TOKEN';
-const FOLDER_ID = 'b1g2jfsjctrmjmpl626g';
+const FOLDER_ID = 'ACTUAL_FOLDER_ID';
 
 const rl = readline.createInterface({
   input: process.stdin,
