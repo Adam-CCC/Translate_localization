@@ -3,7 +3,7 @@ const readline = require('readline');
 const axios = require('axios');
 
 // Ваш IAM-токен от Yandex Cloud
-const IAM_TOKEN = 't1.9euelZqQkpSXxseJj5yZmJmYkM2Wx-3rnpWaz5rJmZuPlYrHm5CMjYyKm4rl8_d-D2JZ-e98L2Ej_t3z9z4-X1n573wvYSP-zef1656VmpiRzc2Nk8iNlsuNi4rGmJSW7_zF656VmpiRzc2Nk8iNlsuNi4rGmJSW.q1MS37ijBRkWhbh2r8f-t8sSmMMOU4IvY0m3grTRrgufbAkB3ZDsDdShT0kOgebcTYhFtOZgyXmEInGCNY9TCA';
+const IAM_TOKEN = 'ACTUAL_TOKEN';
 const FOLDER_ID = 'b1g2jfsjctrmjmpl626g';
 
 const rl = readline.createInterface({
